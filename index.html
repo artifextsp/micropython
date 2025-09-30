@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador LEGO Spike Prime</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 550px;
+            grid-template-rows: 60px 1fr 300px;
+            height: 100vh;
+            gap: 2px;
+            background: #000;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            background: #2d2d30;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 12px;
+            border-bottom: 2px solid #007acc;
+        }
+
+        .header h1 { font-size: 18px; color: #fff; margin-right: auto; }
+
+        .btn {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: #1177bb; }
+        .btn:disabled { background: #555; cursor: not-allowed; }
+        .btn.reset { background: #c72e2e; }
+        .btn.reset:hover { background: #e13838; }
+        .btn.help { background: #6d28d9; }
+        .btn.help:hover { background: #7c3aed; }
+
+        .editor-container {
+            background: #1e1e1e;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-tabs {
+            background: #2d2d30;
+            padding: 8px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .tab {
+            padding: 6px 12px;
+            background: #3c3c3c;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .tab.active { background: #1e1e1e; color: #fff; }
+
+        #editor {
+            flex: 1;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            outline: none;
+            resize: none;
+            overflow-y: auto;
+            tab-size: 4;
+        }
+
+        #editor::-webkit-scrollbar { width: 12px; }
+        #editor::-webkit-scrollbar-track { background: #252526; }
+        #editor::-webkit-scrollbar-thumb { background: #555; border-radius: 6px; }
+
+        .simulation-area {
+            background: #252526;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            gap: 10px;
+        }
+
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sim-header h2 { font-size: 16px; color: #fff; }
+
+        #canvas-container {
+            flex: 1;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 320px;
+        }
+
+        #worldCanvas { width: 100%; height: 100%; display: block; }
+
+        .variables-panel {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 130px;
+            overflow-y: auto;
+            border: 2px solid #4ec9b0;
+        }
+
+        .variables-panel::-webkit-scrollbar { width: 8px; }
+        .variables-panel::-webkit-scrollbar-track { background: #252526; }
+        .variables-panel::-webkit-scrollbar-thumb { background: #4ec9b0; border-radius: 4px; }
+
+        .variables-panel h3 {
+            font-size: 13px;
+            color: #4ec9b0;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .var-item {
+            font-size: 12px;
+            font-family: 'Consolas', monospace;
+            padding: 3px 0;
+            color: #9cdcfe;
+        }
+
+        .console {
+            grid-column: 1 / -1;
+            background: #0a0a0a;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            border-top: 4px solid #22c55e;
+            max-height: 300px;
+            min-height: 300px;
+        }
+
+        .console::-webkit-scrollbar { width: 12px; }
+        .console::-webkit-scrollbar-track { background: #252526; }
+        .console::-webkit-scrollbar-thumb { background: #4ec9b0; border-radius: 6px; }
+
+        .console-header {
+            color: #22c55e;
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-bottom: 2px solid #22c55e;
+            padding-bottom: 8px;
+            background: #1a1a1a;
+            padding: 10px;
+            margin: -15px -15px 12px -15px;
+        }
+
+        .console-line { padding: 4px 0; line-height: 1.5; }
+        .console-error { color: #f48771; font-weight: bold; }
+        .console-output { color: #ce9178; }
+        .console-info { color: #4fc1ff; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background: #1e1e1e;
+            margin: 3% auto;
+            padding: 30px;
+            border: 2px solid #007acc;
+            border-radius: 8px;
+            width: 85%;
+            max-width: 1000px;
+            max-height: 85vh;
+            overflow-y: auto;
+            color: #d4d4d4;
+        }
+
+        .modal-content::-webkit-scrollbar { width: 12px; }
+        .modal-content::-webkit-scrollbar-track { background: #252526; }
+        .modal-content::-webkit-scrollbar-thumb { background: #555; border-radius: 6px; }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .close:hover { color: #fff; }
+
+        .modal-content h2 {
+            color: #4ec9b0;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .modal-content h3 {
+            color: #569cd6;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .modal-content pre {
+            background: #252526;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 12px 0;
+            border-left: 4px solid #007acc;
+            font-size: 13px;
+        }
+
+        .modal-content code {
+            color: #ce9178;
+            font-family: 'Consolas', monospace;
+        }
+
+        .modal-content p {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Simulador LEGO Spike Prime</h1>
+            <button class="btn help" id="helpBtn">❓ Ayuda</button>
+            <button class="btn" id="runBtn">▶ Ejecutar</button>
+            <button class="btn" id="pauseBtn" disabled>⏸ Pausar</button>
+            <button class="btn" id="stepBtn">⏭ Paso a Paso</button>
+            <button class="btn reset" id="resetBtn">🔄 Reset</button>
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+                <label style="font-size: 12px; color: #ccc;">Velocidad:</label>
+                <input type="range" id="speedSlider" min="1" max="10" value="5" step="1" style="width: 80px;">
+                <span id="speedValue" style="font-size: 12px; color: #ccc; min-width: 25px;">5x</span>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-tabs">
+                <button class="tab active" data-example="basic">Mi Código</button>
+                <button class="tab" data-example="forward">Avanzar</button>
+                <button class="tab" data-example="square">Cuadrado</button>
+                <button class="tab" data-example="giro">Giros</button>
+            </div>
+            <textarea id="editor" spellcheck="false">// Escribe tu código JavaScript aquí
+// Usa la API de LEGO Spike Prime
+
+</textarea>
+        </div>
+
+        <div class="simulation-area">
+            <div class="sim-header">
+                <h2>Simulación</h2>
+                <div style="font-size: 11px; color: #888;">
+                    🟢 Motor A (Izq) | 🔵 Motor B (Der) | 🟡 Sensores
+                </div>
+            </div>
+            <div id="canvas-container">
+                <canvas id="worldCanvas"></canvas>
+            </div>
+            <div class="variables-panel">
+                <h3>⚡ VARIABLES EN VIVO</h3>
+                <div id="variables"></div>
+            </div>
+        </div>
+
+        <div class="console">
+            <div class="console-header">📟 CONSOLA DE EJECUCIÓN</div>
+            <div id="consoleOutput"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Ayuda -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>📚 Guía del Simulador LEGO Spike Prime</h2>
+            
+            <h3>🎮 Controles</h3>
+            <p><strong>▶ Ejecutar:</strong> Inicia el programa</p>
+            <p><strong>⏸ Pausar:</strong> Pausa/continúa la ejecución</p>
+            <p><strong>⏭ Paso a Paso:</strong> Ejecuta el programa lentamente paso por paso</p>
+            <p><strong>🔄 Reset:</strong> Reinicia el robot a la posición inicial</p>
+            
+            <h3>📝 API del Robot</h3>
+            
+            <h4>1. Configurar Motores</h4>
+            <pre><code>motor_pair.pair(0, 'A', 'B');</code></pre>
+            <p>Configura los motores A (izquierda) y B (derecha) como par de ruedas.</p>
+            
+            <h4>2. Mover el Robot</h4>
+            <pre><code>await motor_pair.move_for_degrees(0, 720, 0, 400);</code></pre>
+            <p>Parámetros:</p>
+            <p>• <code>0</code>: ID del par de motores</p>
+            <p>• <code>720</code>: Grados a girar (+ adelante, - atrás)</p>
+            <p>• <code>0</code>: Dirección (-100 izq, 0 recto, 100 der)</p>
+            <p>• <code>400</code>: Velocidad (0-1050)</p>
+            
+            <h4>3. Movimiento Tank (ruedas independientes)</h4>
+            <pre><code>await motor_pair.move_tank_for_degrees(0, 360, 400, -400);</code></pre>
+            <p>Parámetros:</p>
+            <p>• <code>360</code>: Grados totales</p>
+            <p>• <code>400</code>: Velocidad rueda izquierda</p>
+            <p>• <code>-400</code>: Velocidad rueda derecha</p>
+            
+            <h4>4. Pausas</h4>
+            <pre><code>await delay(1000);  // Espera 1 segundo</code></pre>
+            
+            <h4>5. Imprimir en Consola</h4>
+            <pre><code>log("Mensaje en consola");</code></pre>
+            
+            <h3>💡 Ejemplo Completo</h3>
+            <pre><code>motor_pair.pair(0, 'A', 'B');
+
+log("Iniciando movimiento");
+await motor_pair.move_for_degrees(0, 720, 0, 400);
+
+await delay(500);
+
+log("Girando");
+await motor_pair.move_for_degrees(0, 360, 50, 300);
+
+log("¡Completado!");</code></pre>
+        </div>
+    </div>
+
+    <script>
+        const CELL_SIZE = 25;
+        const canvas = document.getElementById('worldCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let robot = {
+            x: 10,
+            y: 8,
+            angle: 0,
+            motorA: { degrees: 0, velocity: 0 },
+            motorB: { degrees: 0, velocity: 0 }
+        };
+
+        let isRunning = false;
+        let isPaused = false;
+        let stepMode = false;
+        let executionSpeed = 5;
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            drawWorld();
+        }
+
+        function drawWorld() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f5f5f5';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= canvas.width; x += CELL_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= canvas.height; y += CELL_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            drawRobot();
+        }
+
+        function drawRobot() {
+            const px = robot.x * CELL_SIZE;
+            const py = robot.y * CELL_SIZE;
+            
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.rotate(robot.angle);
+            
+            // Cuerpo principal (rectángulo azul)
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillRect(-CELL_SIZE * 0.7, -CELL_SIZE * 0.5, CELL_SIZE * 1.4, CELL_SIZE);
+            
+            ctx.strokeStyle = '#1e40af';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-CELL_SIZE * 0.7, -CELL_SIZE * 0.5, CELL_SIZE * 1.4, CELL_SIZE);
+            
+            // Rueda IZQUIERDA (Motor A) - lado superior del robot
+            ctx.fillStyle = robot.motorA.velocity !== 0 ? '#22c55e' : '#333';
+            ctx.fillRect(-CELL_SIZE * 0.8, -CELL_SIZE * 0.7, CELL_SIZE * 1.6, CELL_SIZE * 0.2);
+            
+            // Rueda DERECHA (Motor B) - lado inferior del robot
+            ctx.fillStyle = robot.motorB.velocity !== 0 ? '#60a5fa' : '#333';
+            ctx.fillRect(-CELL_SIZE * 0.8, CELL_SIZE * 0.5, CELL_SIZE * 1.6, CELL_SIZE * 0.2);
+            
+            // Sensor superior (amarillo) - AL FRENTE DEL ROBOT, arriba
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(CELL_SIZE * 0.85, -CELL_SIZE * 0.2, CELL_SIZE * 0.12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Sensor inferior (amarillo) - AL FRENTE DEL ROBOT, abajo
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(CELL_SIZE * 0.85, CELL_SIZE * 0.2, CELL_SIZE * 0.12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Flecha indicadora de dirección (blanca)
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.moveTo(CELL_SIZE * 0.6, 0);
+            ctx.lineTo(CELL_SIZE * 0.35, -CELL_SIZE * 0.12);
+            ctx.lineTo(CELL_SIZE * 0.35, CELL_SIZE * 0.12);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms / executionSpeed));
+        }
+
+        function log(message, type = 'output') {
+            const output = document.getElementById('consoleOutput');
+            const line = document.createElement('div');
+            line.className = 'console-line console-' + type;
+            line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function updateVars() {
+            document.getElementById('variables').innerHTML = 
+                '<div class="var-item">robot.x = ' + robot.x.toFixed(2) + '</div>' +
+                '<div class="var-item">robot.y = ' + robot.y.toFixed(2) + '</div>' +
+                '<div class="var-item">angle = ' + (robot.angle * 180 / Math.PI).toFixed(1) + '°</div>' +
+                '<div class="var-item">motorA.deg = ' + robot.motorA.degrees.toFixed(0) + '</div>' +
+                '<div class="var-item">motorB.deg = ' + robot.motorB.degrees.toFixed(0) + '</div>' +
+                '<div class="var-item">motorA.vel = ' + robot.motorA.velocity + '</div>' +
+                '<div class="var-item">motorB.vel = ' + robot.motorB.velocity + '</div>';
+        }
+
+        // API LEGO SPIKE PRIME
+        const motor_pair = {
+            pair(pairNum, portA, portB) {
+                log('✓ Motores configurados en puertos ' + portA + ' y ' + portB, 'info');
+            },
+            
+            async move_for_degrees(pairNum, degrees, steering, velocity = 360) {
+                log('→ Moviendo ' + degrees + '° (dir: ' + steering + ', vel: ' + velocity + ')', 'info');
+                
+                const distance = Math.abs(degrees / 360) * 2;
+                const steps = Math.abs(degrees / 10);
+                const dir = degrees > 0 ? 1 : -1;
+                
+                for (let i = 0; i < steps; i++) {
+                    if (!isRunning) break;
+                    
+                    while (isPaused && !stepMode) {
+                        await sleep(100);
+                    }
+                    
+                    if (stepMode && isPaused) {
+                        await new Promise(resolve => {
+                            const check = setInterval(() => {
+                                if (!isPaused) {
+                                    clearInterval(check);
+                                    resolve();
+                                }
+                            }, 50);
+                        });
+                        isPaused = true;
+                    }
+                    
+                    robot.motorA.velocity = velocity * dir;
+                    robot.motorB.velocity = velocity * dir;
+                    
+                    const turn = (steering / 100) * 0.03;
+                    
+                    robot.x += Math.cos(robot.angle) * (distance / steps) * dir;
+                    robot.y += Math.sin(robot.angle) * (distance / steps) * dir;
+                    robot.angle += turn * dir;
+                    
+                    robot.motorA.degrees += degrees / steps;
+                    robot.motorB.degrees += degrees / steps;
+                    
+                    updateVars();
+                    drawWorld();
+                    await sleep(30);
+                }
+                
+                robot.motorA.velocity = 0;
+                robot.motorB.velocity = 0;
+                updateVars();
+                drawWorld();
+            },
+            
+            async move_tank_for_degrees(pairNum, degrees, leftVel, rightVel) {
+                log('→ Tank: ' + degrees + '° (L:' + leftVel + ' R:' + rightVel + ')', 'info');
+                
+                const steps = Math.abs(degrees / 10);
+                
+                for (let i = 0; i < steps; i++) {
+                    if (!isRunning) break;
+                    
+                    while (isPaused && !stepMode) {
+                        await sleep(100);
+                    }
+                    
+                    robot.motorA.velocity = leftVel;
+                    robot.motorB.velocity = rightVel;
+                    
+                    const turn = (rightVel - leftVel) / 3000;
+                    const dist = Math.abs(degrees / 360) * 1.5 / steps;
+                    
+                    robot.x += Math.cos(robot.angle) * dist;
+                    robot.y += Math.sin(robot.angle) * dist;
+                    robot.angle += turn;
+                    
+                    updateVars();
+                    drawWorld();
+                    await sleep(30);
+                }
+                
+                robot.motorA.velocity = 0;
+                robot.motorB.velocity = 0;
+                updateVars();
+            }
+        };
+
+        async function delay(ms) {
+            log('⏱ Esperando ' + ms + 'ms', 'info');
+            await sleep(ms);
+        }
+
+        async function executeCode() {
+            const code = document.getElementById('editor').value;
+            document.getElementById('consoleOutput').innerHTML = '';
+            log('🚀 Iniciando programa...', 'info');
+            
+            try {
+                const func = new Function('motor_pair', 'log', 'delay', 
+                    'return (async function() {' + code + '\nlog("✓ Programa completado", "info");})();');
+                await func(motor_pair, log, delay);
+            } catch (error) {
+                log('✗ ERROR: ' + error.message, 'error');
+                console.error(error);
+            }
+            
+            isRunning = false;
+            document.getElementById('runBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+        }
+
+        const examples = {
+            basic: '// Escribe tu código JavaScript aquí\n// Usa la API de LEGO Spike Prime\n\n',
+            
+            forward: `// Ejemplo: Avanzar y Retroceder
+motor_pair.pair(0, 'A', 'B');
+
+log("Avanzando...");
+await motor_pair.move_for_degrees(0, 720, 0, 400);
+
+await delay(500);
+
+log("Retrocediendo...");
+await motor_pair.move_for_degrees(0, -720, 0, 400);
+
+log("¡Completado!");`,
+            
+            square: `// Ejemplo: Recorrer un Cuadrado
+motor_pair.pair(0, 'A', 'B');
+
+for (let i = 0; i < 4; i++) {
+    log("Lado " + (i + 1));
+    
+    // Avanzar
+    await motor_pair.move_for_degrees(0, 360, 0, 400);
+    
+    // Girar 90 grados
+    await motor_pair.move_tank_for_degrees(0, 250, 400, -400);
+}
+
+log("¡Cuadrado completado!");`,
+            
+            giro: `// Ejemplo: Movimientos con Giros
+motor_pair.pair(0, 'A', 'B');
+
+log("Avanzar recto");
+await motor_pair.move_for_degrees(0, 360, 0, 300);
+
+await delay(300);
+
+log("Girar a la derecha");
+await motor_pair.move_for_degrees(0, 360, 50, 300);
+
+await delay(300);
+
+log("Girar a la izquierda");
+await motor_pair.move_for_degrees(0, 360, -50, 300);
+
+log("¡Listo!");`
+        };
+
+        document.getElementById('runBtn').addEventListener('click', () => {
+            isRunning = true;
+            isPaused = false;
+            stepMode = false;
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            executeCode();
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isPaused = !isPaused;
+            document.getElementById('pauseBtn').textContent = isPaused ? '▶ Continuar' : '⏸ Pausar';
+        });
+
+        document.getElementById('stepBtn').addEventListener('click', () => {
+            if (!isRunning) {
+                isRunning = true;
+                stepMode = true;
+                isPaused = true;
+                document.getElementById('runBtn').disabled = true;
+                document.getElementById('pauseBtn').disabled = false;
+                executeCode();
+            } else {
+                isPaused = false;
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            isRunning = false;
+            isPaused = false;
+            stepMode = false;
+            robot = { x: 10, y: 8, angle: 0, motorA: {degrees:0,velocity:0}, motorB: {degrees:0,velocity:0} };
+            drawWorld();
+            updateVars();
+            document.getElementById('consoleOutput').innerHTML = '';
+            document.getElementById('runBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('pauseBtn').textContent = '⏸ Pausar';
+            log('🔄 Simulador reiniciado', 'info');
+        });
+
+        document.getElementById('speedSlider').addEventListener('input', e => {
+            executionSpeed = parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = executionSpeed + 'x';
+        });
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', e => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById('editor').value = examples[e.target.dataset.example];
+            });
+        });
+
+        // Modal de Ayuda
+        const modal = document.getElementById('helpModal');
+        document.getElementById('helpBtn').onclick = () => modal.style.display = 'block';
+        document.querySelector('.close').onclick = () => modal.style.display = 'none';
+        window.onclick = e => { if (e.target == modal) modal.style.display = 'none'; };
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        updateVars();
+        log('✓ Simulador LEGO Spike Prime iniciado', 'info');
+        log('💡 Presiona ❓ Ayuda para ver la documentación completa', 'info');
+        log('📝 Selecciona un ejemplo o escribe tu código', 'info');
+    </script>
+</body>
+</html>
