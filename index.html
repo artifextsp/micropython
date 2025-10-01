@@ -31,6 +31,7 @@
             padding: 0 20px;
             gap: 12px;
             border-bottom: 2px solid #007acc;
+            flex-wrap: wrap;
         }
 
         .header h1 { font-size: 18px; color: #fff; margin-right: auto; }
@@ -52,11 +53,18 @@
         .btn.reset:hover { background: #e13838; }
         .btn.help { background: #6d28d9; }
         .btn.help:hover { background: #7c3aed; }
+        .btn.save { background: #16a34a; }
+        .btn.save:hover { background: #22c55e; }
+        .btn.open { background: #0891b2; }
+        .btn.open:hover { background: #06b6d4; }
+
+        #fileInput { display: none; }
 
         .editor-container {
             background: #1e1e1e;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .editor-tabs {
@@ -77,24 +85,200 @@
 
         .tab.active { background: #1e1e1e; color: #fff; }
 
-        #editor {
+        .editor-wrapper {
+            position: relative;
             flex: 1;
+            overflow: hidden;
+        }
+
+        #lineNumbers {
+            position: absolute;
+            left: 0;
+            top: 15px;
+            width: 50px;
+            padding: 0 5px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #858585;
+            background: #1a1a1a;
+            border-right: 1px solid #333;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .line-number {
+            text-align: right;
+            padding-right: 10px;
+            height: 22.4px;
+        }
+
+        .line-number.active {
+            background: #fbbf24;
+            color: #000;
+            font-weight: bold;
+        }
+
+        #syntaxHighlight {
+            position: absolute;
+            left: 50px;
+            top: 0;
+            right: 0;
+            bottom: 0;
             padding: 15px;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 14px;
             line-height: 1.6;
             background: #1e1e1e;
             color: #d4d4d4;
+            pointer-events: none;
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            tab-size: 4;
+        }
+
+        #editor {
+            position: absolute;
+            left: 50px;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            background: transparent;
+            color: transparent;
             border: none;
             outline: none;
             resize: none;
             overflow-y: auto;
             tab-size: 4;
+            caret-color: #fff;
+            z-index: 1;
         }
 
         #editor::-webkit-scrollbar { width: 12px; }
         #editor::-webkit-scrollbar-track { background: #252526; }
         #editor::-webkit-scrollbar-thumb { background: #555; border-radius: 6px; }
+
+        .autocomplete {
+            position: absolute;
+            background: #2d2d30;
+            border: 1px solid #007acc;
+            border-radius: 4px;
+            max-height: 300px;
+            max-width: 500px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+
+        .autocomplete-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            color: #d4d4d4;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background: #094771;
+        }
+
+        .autocomplete-item .keyword {
+            color: #fbbf24;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .autocomplete-item .description {
+            color: #858585;
+            font-size: 11px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .autocomplete-item .params {
+            color: #9cdcfe;
+            font-size: 11px;
+            display: block;
+            margin-top: 4px;
+            padding-left: 8px;
+            border-left: 2px solid #007acc;
+        }
+
+        .autocomplete-item .param-name {
+            color: #4ec9b0;
+            font-weight: bold;
+        }
+
+        .syntax-keyword { color: #fbbf24; font-weight: bold; }
+        .syntax-string { color: #ce9178; }
+        .syntax-comment { color: #6a9955; }
+        .syntax-number { color: #b5cea8; }
+        .syntax-function { color: #dcdcaa; }
+
+        /* Tooltip Styles */
+        .code-tooltip {
+            position: fixed;
+            background: #1e1e1e;
+            border: 2px solid #007acc;
+            border-radius: 6px;
+            padding: 12px 16px;
+            color: #d4d4d4;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 13px;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            z-index: 2000;
+            display: none;
+            pointer-events: none;
+        }
+
+        .code-tooltip.visible {
+            display: block;
+        }
+
+        .tooltip-title {
+            color: #4ec9b0;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 6px;
+        }
+
+        .tooltip-description {
+            color: #d4d4d4;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .tooltip-signature {
+            background: #252526;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            color: #9cdcfe;
+            margin-top: 8px;
+            border-left: 3px solid #007acc;
+        }
+
+        .tooltip-param {
+            color: #4ec9b0;
+            font-weight: bold;
+        }
 
         .simulation-area {
             background: #252526;
@@ -112,15 +296,60 @@
 
         .sim-header h2 { font-size: 16px; color: #fff; }
 
+        .zoom-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .zoom-btn {
+            background: #0e639c;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .zoom-btn:hover { background: #1177bb; }
+
+        .zoom-level {
+            font-size: 12px;
+            color: #ccc;
+            min-width: 45px;
+            text-align: center;
+        }
+
         #canvas-container {
             flex: 1;
             background: #fff;
             border-radius: 8px;
             overflow: hidden;
             min-height: 320px;
+            position: relative;
         }
 
-        #worldCanvas { width: 100%; height: 100%; display: block; }
+        #worldCanvas { 
+            width: 100%; 
+            height: 100%; 
+            display: block;
+            cursor: default;
+        }
+
+        #worldCanvas.draggable {
+            cursor: grab;
+        }
+
+        #worldCanvas.dragging {
+            cursor: grabbing;
+        }
 
         .variables-panel {
             background: #1e1e1e;
@@ -130,10 +359,6 @@
             overflow-y: auto;
             border: 2px solid #4ec9b0;
         }
-
-        .variables-panel::-webkit-scrollbar { width: 8px; }
-        .variables-panel::-webkit-scrollbar-track { background: #252526; }
-        .variables-panel::-webkit-scrollbar-thumb { background: #4ec9b0; border-radius: 4px; }
 
         .variables-panel h3 {
             font-size: 13px;
@@ -181,6 +406,7 @@
         .console-error { color: #f48771; font-weight: bold; }
         .console-output { color: #ce9178; }
         .console-info { color: #4fc1ff; }
+        .console-step { color: #fbbf24; font-weight: bold; }
 
         .modal {
             display: none;
@@ -206,10 +432,6 @@
             overflow-y: auto;
             color: #d4d4d4;
         }
-
-        .modal-content::-webkit-scrollbar { width: 12px; }
-        .modal-content::-webkit-scrollbar-track { background: #252526; }
-        .modal-content::-webkit-scrollbar-thumb { background: #555; border-radius: 6px; }
 
         .close {
             color: #aaa;
@@ -245,11 +467,6 @@
             font-size: 13px;
         }
 
-        .modal-content code {
-            color: #ce9178;
-            font-family: 'Consolas', monospace;
-        }
-
         .modal-content p {
             margin: 10px 0;
             line-height: 1.6;
@@ -260,6 +477,9 @@
     <div class="container">
         <div class="header">
             <h1>🤖 Simulador LEGO Spike Prime</h1>
+            <button class="btn save" id="saveBtn">💾 Guardar</button>
+            <button class="btn open" id="openBtn">📂 Abrir</button>
+            <input type="file" id="fileInput" accept=".js,.txt">
             <button class="btn help" id="helpBtn">❓ Ayuda</button>
             <button class="btn" id="runBtn">▶ Ejecutar</button>
             <button class="btn" id="pauseBtn" disabled>⏸ Pausar</button>
@@ -277,19 +497,29 @@
                 <button class="tab active" data-example="basic">Mi Código</button>
                 <button class="tab" data-example="forward">Avanzar</button>
                 <button class="tab" data-example="square">Cuadrado</button>
-                <button class="tab" data-example="giro">Giros</button>
+                <button class="tab" data-example="time">Por Tiempo</button>
             </div>
-            <textarea id="editor" spellcheck="false">// Escribe tu código JavaScript aquí
+            <div class="editor-wrapper">
+                <div id="lineNumbers"></div>
+                <div id="syntaxHighlight"></div>
+                <textarea id="editor" spellcheck="false">// Escribe tu código JavaScript aquí
 // Usa la API de LEGO Spike Prime
 
 </textarea>
+                <div id="autocomplete" class="autocomplete"></div>
+            </div>
         </div>
 
         <div class="simulation-area">
             <div class="sim-header">
                 <h2>Simulación</h2>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" id="zoomOutBtn" title="Alejar">-</button>
+                    <span class="zoom-level" id="zoomLevel">100%</span>
+                    <button class="zoom-btn" id="zoomInBtn" title="Acercar">+</button>
+                </div>
                 <div style="font-size: 11px; color: #888;">
-                    🟢 Motor A (Izq) | 🔵 Motor B (Der) | 🟡 Sensores
+                    🟢 Motor A (Arriba) | 🔵 Motor B (Abajo) | 🟡 Sensores
                 </div>
             </div>
             <div id="canvas-container">
@@ -307,64 +537,41 @@
         </div>
     </div>
 
-    <!-- Modal de Ayuda -->
+    <div id="codeTooltip" class="code-tooltip"></div>
+
     <div id="helpModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>📚 Guía del Simulador LEGO Spike Prime</h2>
+            <h2>📚 Guía del Simulador</h2>
             
             <h3>🎮 Controles</h3>
-            <p><strong>▶ Ejecutar:</strong> Inicia el programa</p>
-            <p><strong>⏸ Pausar:</strong> Pausa/continúa la ejecución</p>
-            <p><strong>⏭ Paso a Paso:</strong> Ejecuta el programa lentamente paso por paso</p>
-            <p><strong>🔄 Reset:</strong> Reinicia el robot a la posición inicial</p>
+            <p><strong>▶ Ejecutar:</strong> Ejecuta todo el programa</p>
+            <p><strong>⏸ Pausar:</strong> Pausa/continúa</p>
+            <p><strong>⏭ Paso a Paso:</strong> Ejecuta línea por línea (haz clic para avanzar)</p>
+            <p><strong>🔄 Reset:</strong> Reinicia el robot</p>
             
-            <h3>📝 API del Robot</h3>
-            
-            <h4>1. Configurar Motores</h4>
-            <pre><code>motor_pair.pair(0, 'A', 'B');</code></pre>
-            <p>Configura los motores A (izquierda) y B (derecha) como par de ruedas.</p>
-            
-            <h4>2. Mover el Robot</h4>
-            <pre><code>await motor_pair.move_for_degrees(0, 720, 0, 400);</code></pre>
-            <p>Parámetros:</p>
-            <p>• <code>0</code>: ID del par de motores</p>
-            <p>• <code>720</code>: Grados a girar (+ adelante, - atrás)</p>
-            <p>• <code>0</code>: Dirección (-100 izq, 0 recto, 100 der)</p>
-            <p>• <code>400</code>: Velocidad (0-1050)</p>
-            
-            <h4>3. Movimiento Tank (ruedas independientes)</h4>
-            <pre><code>await motor_pair.move_tank_for_degrees(0, 360, 400, -400);</code></pre>
-            <p>Parámetros:</p>
-            <p>• <code>360</code>: Grados totales</p>
-            <p>• <code>400</code>: Velocidad rueda izquierda</p>
-            <p>• <code>-400</code>: Velocidad rueda derecha</p>
-            
-            <h4>4. Pausas</h4>
-            <pre><code>await delay(1000);  // Espera 1 segundo</code></pre>
-            
-            <h4>5. Imprimir en Consola</h4>
-            <pre><code>log("Mensaje en consola");</code></pre>
-            
-            <h3>💡 Ejemplo Completo</h3>
+            <h3>📝 API Básica</h3>
             <pre><code>motor_pair.pair(0, 'A', 'B');
-
-log("Iniciando movimiento");
 await motor_pair.move_for_degrees(0, 720, 0, 400);
+await motor_pair.move_for_time(0, 2000, 0, 50);
+await delay(1000);
+log("Mensaje");</code></pre>
 
-await delay(500);
-
-log("Girando");
-await motor_pair.move_for_degrees(0, 360, 50, 300);
-
-log("¡Completado!");</code></pre>
+            <h3>💡 Tooltips</h3>
+            <p>Pasa el cursor sobre funciones y parámetros en el código para ver su documentación</p>
         </div>
     </div>
 
     <script>
-        const CELL_SIZE = 25;
+        const BASE_CELL_SIZE = 25;
+        let CELL_SIZE = BASE_CELL_SIZE;
+        let zoomLevel = 1.0;
         const canvas = document.getElementById('worldCanvas');
         const ctx = canvas.getContext('2d');
+        
+        const WHEEL_DIAMETER = 0.56;
+        const WHEELBASE = 1.2;
+        const WHEEL_CIRCUMFERENCE = Math.PI * WHEEL_DIAMETER;
         
         let robot = {
             x: 10,
@@ -378,11 +585,333 @@ log("¡Completado!");</code></pre>
         let isPaused = false;
         let stepMode = false;
         let executionSpeed = 5;
+        let codeLines = [];
+        let currentLine = -1;
+        let waitingForStep = false;
+        
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        // Documentación de funciones y parámetros
+        const apiDocs = {
+            'motor_pair.pair': {
+                desc: 'Empareja dos motores para trabajar juntos como sistema de tracción diferencial',
+                params: {
+                    'pairNum': 'Identificador numérico del par de motores (usar 0)',
+                    'portA': 'Puerto del motor izquierdo (típicamente \'A\')',
+                    'portB': 'Puerto del motor derecho (típicamente \'B\')'
+                },
+                signature: 'motor_pair.pair(pairNum, portA, portB)'
+            },
+            'motor_pair.move_for_degrees': {
+                desc: 'Mueve el robot rotando ambos motores por un número específico de grados. Valores positivos = adelante, negativos = atrás',
+                params: {
+                    'pairNum': 'Número del par de motores (0)',
+                    'degrees': 'Grados de rotación (+ adelante, - atrás). 360° = 1 rotación completa',
+                    'steering': 'Control de dirección: -100 (máx. izquierda), 0 (recto), 100 (máx. derecha)',
+                    'velocity': 'Velocidad en grados/segundo (rango: 0-1050, típico: 200-600)'
+                },
+                signature: 'motor_pair.move_for_degrees(pairNum, degrees, steering, velocity)'
+            },
+            'motor_pair.move_for_time': {
+                desc: 'Mueve el robot durante un tiempo específico en milisegundos con velocidad y dirección controladas',
+                params: {
+                    'pairNum': 'Número del par de motores (0)',
+                    'time': 'Duración del movimiento en milisegundos (1000ms = 1 segundo)',
+                    'steering': 'Control de dirección: -100 (máx. izquierda), 0 (recto), 100 (máx. derecha)',
+                    'velocity': 'Porcentaje de velocidad (rango: -100 a 100, + adelante, - atrás)'
+                },
+                signature: 'motor_pair.move_for_time(pairNum, time, steering, velocity)'
+            },
+            'motor_pair.move_tank_for_degrees': {
+                desc: 'Control independiente de cada rueda, útil para giros precisos y movimientos avanzados',
+                params: {
+                    'pairNum': 'Número del par de motores (0)',
+                    'degrees': 'Grados totales del movimiento',
+                    'leftVel': 'Velocidad de la rueda izquierda (+ adelante, - atrás)',
+                    'rightVel': 'Velocidad de la rueda derecha (+ adelante, - atrás)'
+                },
+                signature: 'motor_pair.move_tank_for_degrees(pairNum, degrees, leftVel, rightVel)'
+            },
+            'log': {
+                desc: 'Imprime un mensaje en la consola de ejecución para depuración y seguimiento del programa',
+                params: {
+                    'mensaje': 'Texto o variable a mostrar en la consola'
+                },
+                signature: 'log(mensaje)'
+            },
+            'delay': {
+                desc: 'Pausa la ejecución del programa durante un tiempo específico sin mover el robot',
+                params: {
+                    'ms': 'Tiempo de espera en milisegundos (1000 = 1 segundo)'
+                },
+                signature: 'delay(ms)'
+            },
+            'await': {
+                desc: 'Palabra clave que espera a que se complete una operación asíncrona antes de continuar. Debe usarse con funciones que retornan Promesas.',
+                params: {},
+                signature: 'await <expresión>'
+            }
+        };
+
+        const keywords = [
+            { 
+                text: 'motor_pair.pair', 
+                desc: 'Configurar par de motores',
+                params: [
+                    'pairNum: Número del par (0)',
+                    'portA: Puerto motor izquierdo (\'A\')',
+                    'portB: Puerto motor derecho (\'B\')'
+                ]
+            },
+            { 
+                text: 'motor_pair.move_for_degrees', 
+                desc: 'Mover el robot girando los motores X grados',
+                params: [
+                    'pairNum: Número del par (0)',
+                    'degrees: Grados a girar (+ adelante, - atrás)',
+                    'steering: Dirección (-100=izq, 0=recto, 100=der)',
+                    'velocity: Velocidad en grados/seg (0-1050)'
+                ]
+            },
+            { 
+                text: 'motor_pair.move_for_time', 
+                desc: 'Mover el robot durante X milisegundos',
+                params: [
+                    'pairNum: Número del par (0)',
+                    'time: Duración en milisegundos',
+                    'steering: Dirección (-100=izq, 0=recto, 100=der)',
+                    'velocity: Porcentaje de velocidad (-100 a 100)'
+                ]
+            },
+            { 
+                text: 'motor_pair.move_tank_for_degrees', 
+                desc: 'Mover con control independiente de cada rueda',
+                params: [
+                    'pairNum: Número del par (0)',
+                    'degrees: Grados totales del movimiento',
+                    'leftVel: Velocidad rueda izquierda',
+                    'rightVel: Velocidad rueda derecha'
+                ]
+            },
+            { 
+                text: 'await', 
+                desc: 'Esperar a que termine una operación asíncrona',
+                params: []
+            },
+            { 
+                text: 'async function', 
+                desc: 'Declarar una función asíncrona',
+                params: []
+            },
+            { 
+                text: 'log', 
+                desc: 'Imprimir mensaje en la consola',
+                params: [
+                    'mensaje: Texto a mostrar en consola'
+                ]
+            },
+            { 
+                text: 'delay', 
+                desc: 'Pausar la ejecución por X milisegundos',
+                params: [
+                    'ms: Milisegundos a esperar (1000 = 1 seg)'
+                ]
+            },
+            { 
+                text: 'for', 
+                desc: 'Bucle for - repetir código N veces',
+                params: [
+                    'let i = 0: Variable contador inicial',
+                    'i < N: Condición de parada',
+                    'i++: Incrementar contador'
+                ]
+            },
+            { 
+                text: 'while', 
+                desc: 'Bucle while - repetir mientras condición sea verdadera',
+                params: [
+                    'condición: Expresión booleana'
+                ]
+            },
+            { 
+                text: 'if', 
+                desc: 'Condicional - ejecutar si condición es verdadera',
+                params: [
+                    'condición: Expresión booleana'
+                ]
+            },
+            { 
+                text: 'const', 
+                desc: 'Declarar una constante (no se puede cambiar)',
+                params: [
+                    'nombre = valor'
+                ]
+            },
+            { 
+                text: 'let', 
+                desc: 'Declarar una variable (se puede cambiar)',
+                params: [
+                    'nombre = valor'
+                ]
+            }
+        ];
+
+        const reservedWords = ['motor_pair', 'await', 'async', 'function', 'const', 'let', 'for', 'while', 'if', 'else', 'return', 'log', 'delay', 'true', 'false', 'pair', 'move_for_degrees', 'move_for_time', 'move_tank_for_degrees'];
+
+        let autocompleteVisible = false;
+        let autocompleteIndex = -1;
+        let autocompleteItems = [];
+
+        // Sistema de tooltips
+        const tooltip = document.getElementById('codeTooltip');
+        let tooltipTimeout = null;
+
+        function showTooltip(content, x, y) {
+            tooltip.innerHTML = content;
+            tooltip.style.left = x + 'px';
+            tooltip.style.top = (y + 20) + 'px';
+            tooltip.classList.add('visible');
+        }
+
+        function hideTooltip() {
+            tooltip.classList.remove('visible');
+        }
+
+        function getWordAtPosition(text, position) {
+            const beforeCursor = text.substring(0, position);
+            const afterCursor = text.substring(position);
+            
+            const matchBefore = beforeCursor.match(/[a-zA-Z_.]+$/);
+            const matchAfter = afterCursor.match(/^[a-zA-Z_.]*/);
+            
+            const wordBefore = matchBefore ? matchBefore[0] : '';
+            const wordAfter = matchAfter ? matchAfter[0] : '';
+            
+            return wordBefore + wordAfter;
+        }
+
+        function extractFunctionAndParam(text, position) {
+            // Buscar hacia atrás hasta encontrar el inicio de la función
+            let i = position;
+            let parenCount = 0;
+            let currentParam = '';
+            let paramIndex = 0;
+            
+            // Contar parámetros hasta la posición actual
+            while (i > 0) {
+                const char = text[i];
+                if (char === ')') parenCount++;
+                if (char === '(') {
+                    parenCount--;
+                    if (parenCount < 0) break;
+                }
+                if (char === ',' && parenCount === 0) {
+                    paramIndex++;
+                }
+                i--;
+            }
+            
+            if (i <= 0) return null;
+            
+            // Obtener nombre de la función
+            const beforeParen = text.substring(0, i);
+            const funcMatch = beforeParen.match(/([a-zA-Z_.]+)\s*$/);
+            
+            if (!funcMatch) return null;
+            
+            const funcName = funcMatch[1];
+            
+            return { funcName, paramIndex };
+        }
+
+        document.getElementById('editor').addEventListener('mousemove', (e) => {
+            clearTimeout(tooltipTimeout);
+            
+            tooltipTimeout = setTimeout(() => {
+                const editor = document.getElementById('editor');
+                const rect = editor.getBoundingClientRect();
+                
+                // Calcular posición relativa al área de texto (sin números de línea ni padding)
+                const mouseX = e.clientX - rect.left - 50 - 15;
+                const mouseY = e.clientY - rect.top - 15;
+                
+                const lineHeight = 22.4;
+                const charWidth = 8.4;
+                
+                // Calcular línea (ajustando por scroll)
+                const lineIndex = Math.floor((mouseY + editor.scrollTop) / lineHeight);
+                
+                // Calcular columna (ajustando por scroll)
+                const charIndex = Math.max(0, Math.floor((mouseX + editor.scrollLeft) / charWidth));
+                
+                const lines = editor.value.split('\n');
+                if (lineIndex < 0 || lineIndex >= lines.length) {
+                    hideTooltip();
+                    return;
+                }
+                
+                // Calcular posición absoluta en el texto
+                let position = 0;
+                for (let i = 0; i < lineIndex; i++) {
+                    position += lines[i].length + 1; // +1 por el salto de línea
+                }
+                position += Math.min(charIndex, lines[lineIndex].length);
+                
+                const word = getWordAtPosition(editor.value, position);
+                
+                if (word && apiDocs[word]) {
+                    const doc = apiDocs[word];
+                    let content = `<div class="tooltip-title">${word}</div>`;
+                    content += `<div class="tooltip-description">${doc.desc}</div>`;
+                    content += `<div class="tooltip-signature">${doc.signature}</div>`;
+                    
+                    showTooltip(content, e.clientX, e.clientY);
+                    return;
+                }
+                
+                // Verificar si estamos dentro de parámetros de función
+                const funcInfo = extractFunctionAndParam(editor.value, position);
+                if (funcInfo && apiDocs[funcInfo.funcName]) {
+                    const doc = apiDocs[funcInfo.funcName];
+                    const paramNames = Object.keys(doc.params);
+                    
+                    if (funcInfo.paramIndex < paramNames.length) {
+                        const paramName = paramNames[funcInfo.paramIndex];
+                        const paramDesc = doc.params[paramName];
+                        
+                        let content = `<div class="tooltip-title">${funcInfo.funcName}</div>`;
+                        content += `<div class="tooltip-description">Parámetro: <span class="tooltip-param">${paramName}</span></div>`;
+                        content += `<div class="tooltip-description">${paramDesc}</div>`;
+                        content += `<div class="tooltip-signature">${doc.signature}</div>`;
+                        
+                        showTooltip(content, e.clientX, e.clientY);
+                        return;
+                    }
+                }
+                
+                hideTooltip();
+            }, 500);
+        });
+
+        document.getElementById('editor').addEventListener('mouseleave', () => {
+            clearTimeout(tooltipTimeout);
+            hideTooltip();
+        });
 
         function resizeCanvas() {
             const container = document.getElementById('canvas-container');
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
+            drawWorld();
+        }
+
+        function updateZoom(delta) {
+            zoomLevel += delta;
+            zoomLevel = Math.max(0.5, Math.min(3.0, zoomLevel));
+            CELL_SIZE = BASE_CELL_SIZE * zoomLevel;
+            document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
             drawWorld();
         }
 
@@ -417,51 +946,233 @@ log("¡Completado!");</code></pre>
             ctx.translate(px, py);
             ctx.rotate(robot.angle);
             
-            // Cuerpo principal (rectángulo azul)
+            const size = CELL_SIZE * 0.7;
             ctx.fillStyle = '#3b82f6';
-            ctx.fillRect(-CELL_SIZE * 0.7, -CELL_SIZE * 0.5, CELL_SIZE * 1.4, CELL_SIZE);
+            ctx.fillRect(-size/2, -size/2, size, size);
             
             ctx.strokeStyle = '#1e40af';
             ctx.lineWidth = 2;
-            ctx.strokeRect(-CELL_SIZE * 0.7, -CELL_SIZE * 0.5, CELL_SIZE * 1.4, CELL_SIZE);
+            ctx.strokeRect(-size/2, -size/2, size, size);
             
-            // Rueda IZQUIERDA (Motor A) - lado superior del robot
             ctx.fillStyle = robot.motorA.velocity !== 0 ? '#22c55e' : '#333';
-            ctx.fillRect(-CELL_SIZE * 0.8, -CELL_SIZE * 0.7, CELL_SIZE * 1.6, CELL_SIZE * 0.2);
+            ctx.fillRect(-size/2, -size/2 - CELL_SIZE * 0.15, size, CELL_SIZE * 0.15);
             
-            // Rueda DERECHA (Motor B) - lado inferior del robot
             ctx.fillStyle = robot.motorB.velocity !== 0 ? '#60a5fa' : '#333';
-            ctx.fillRect(-CELL_SIZE * 0.8, CELL_SIZE * 0.5, CELL_SIZE * 1.6, CELL_SIZE * 0.2);
+            ctx.fillRect(-size/2, size/2, size, CELL_SIZE * 0.15);
             
-            // Sensor superior (amarillo) - AL FRENTE DEL ROBOT, arriba
             ctx.fillStyle = '#fbbf24';
             ctx.beginPath();
-            ctx.arc(CELL_SIZE * 0.85, -CELL_SIZE * 0.2, CELL_SIZE * 0.12, 0, Math.PI * 2);
+            ctx.arc(size/2 + CELL_SIZE * 0.15, -CELL_SIZE * 0.15, CELL_SIZE * 0.1, 0, Math.PI * 2);
             ctx.fill();
             ctx.strokeStyle = '#f59e0b';
             ctx.lineWidth = 2;
             ctx.stroke();
             
-            // Sensor inferior (amarillo) - AL FRENTE DEL ROBOT, abajo
             ctx.fillStyle = '#fbbf24';
             ctx.beginPath();
-            ctx.arc(CELL_SIZE * 0.85, CELL_SIZE * 0.2, CELL_SIZE * 0.12, 0, Math.PI * 2);
+            ctx.arc(size/2 + CELL_SIZE * 0.15, CELL_SIZE * 0.15, CELL_SIZE * 0.1, 0, Math.PI * 2);
             ctx.fill();
             ctx.strokeStyle = '#f59e0b';
             ctx.lineWidth = 2;
             ctx.stroke();
             
-            // Flecha indicadora de dirección (blanca)
             ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.moveTo(CELL_SIZE * 0.6, 0);
-            ctx.lineTo(CELL_SIZE * 0.35, -CELL_SIZE * 0.12);
-            ctx.lineTo(CELL_SIZE * 0.35, CELL_SIZE * 0.12);
+            ctx.moveTo(size/2 + CELL_SIZE * 0.05, 0);
+            ctx.lineTo(size/2 - CELL_SIZE * 0.1, -CELL_SIZE * 0.1);
+            ctx.lineTo(size/2 - CELL_SIZE * 0.1, CELL_SIZE * 0.1);
             ctx.closePath();
             ctx.fill();
             
             ctx.restore();
         }
+
+        function updateLineNumbers() {
+            const code = document.getElementById('editor').value;
+            const lines = code.split('\n');
+            const lineNumbersDiv = document.getElementById('lineNumbers');
+            lineNumbersDiv.innerHTML = '';
+            
+            lines.forEach((line, index) => {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'line-number';
+                lineDiv.textContent = index + 1;
+                if (index === currentLine) {
+                    lineDiv.classList.add('active');
+                }
+                lineNumbersDiv.appendChild(lineDiv);
+            });
+            
+            applySyntaxHighlight();
+        }
+
+        function applySyntaxHighlight() {
+            const code = document.getElementById('editor').value;
+            const highlightDiv = document.getElementById('syntaxHighlight');
+            
+            let highlighted = code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            highlighted = highlighted.replace(/(\/\/.*)/g, '<span class="syntax-comment">$1</span>');
+            highlighted = highlighted.replace(/(".*?"|'.*?')/g, '<span class="syntax-string">$1</span>');
+            highlighted = highlighted.replace(/\b(\d+)\b/g, '<span class="syntax-number">$1</span>');
+            
+            reservedWords.forEach(word => {
+                const regex = new RegExp('\\b(' + word.replace('.', '\\.') + ')\\b', 'g');
+                highlighted = highlighted.replace(regex, function(match) {
+                    return '<span class="syntax-keyword">' + match + '</span>';
+                });
+            });
+            
+            highlightDiv.innerHTML = highlighted;
+            syncScroll();
+        }
+
+        function syncScroll() {
+            const editor = document.getElementById('editor');
+            const highlight = document.getElementById('syntaxHighlight');
+            highlight.scrollTop = editor.scrollTop;
+            highlight.scrollLeft = editor.scrollLeft;
+        }
+
+        document.getElementById('editor').addEventListener('scroll', syncScroll);
+
+        function showAutocomplete(prefix) {
+            const matches = keywords.filter(k => k.text.toLowerCase().startsWith(prefix.toLowerCase()));
+            
+            if (matches.length === 0) {
+                hideAutocomplete();
+                return;
+            }
+            
+            autocompleteItems = matches;
+            autocompleteIndex = 0;
+            
+            const editor = document.getElementById('editor');
+            const autocompleteDiv = document.getElementById('autocomplete');
+            
+            const lines = editor.value.substr(0, editor.selectionStart).split('\n');
+            const currentLineIndex = lines.length - 1;
+            const currentColumn = lines[currentLineIndex].length;
+            
+            const top = 15 + (currentLineIndex * 22.4);
+            const left = 50 + 15 + (currentColumn * 8.4);
+            
+            autocompleteDiv.style.top = top + 'px';
+            autocompleteDiv.style.left = left + 'px';
+            autocompleteDiv.innerHTML = '';
+            
+            matches.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'autocomplete-item' + (index === 0 ? ' selected' : '');
+                
+                let html = '<span class="keyword">' + item.text + '</span>';
+                html += '<span class="description">' + item.desc + '</span>';
+                
+                if (item.params && item.params.length > 0) {
+                    html += '<div class="params">';
+                    item.params.forEach(param => {
+                        const parts = param.split(':');
+                        if (parts.length === 2) {
+                            html += '<span class="param-name">' + parts[0] + '</span>: ' + parts[1] + '<br>';
+                        } else {
+                            html += param + '<br>';
+                        }
+                    });
+                    html += '</div>';
+                }
+                
+                div.innerHTML = html;
+                div.onclick = () => insertAutocomplete(item.text);
+                autocompleteDiv.appendChild(div);
+            });
+            
+            autocompleteDiv.style.display = 'block';
+            autocompleteVisible = true;
+        }
+
+        function hideAutocomplete() {
+            document.getElementById('autocomplete').style.display = 'none';
+            autocompleteVisible = false;
+            autocompleteIndex = -1;
+        }
+
+        function updateAutocompleteSelection() {
+            const items = document.querySelectorAll('.autocomplete-item');
+            items.forEach((item, index) => {
+                item.classList.toggle('selected', index === autocompleteIndex);
+            });
+        }
+
+        function insertAutocomplete(text) {
+            const editor = document.getElementById('editor');
+            const start = editor.selectionStart;
+            const value = editor.value;
+            
+            let wordStart = start;
+            while (wordStart > 0 && /[a-zA-Z_.]/.test(value[wordStart - 1])) {
+                wordStart--;
+            }
+            
+            editor.value = value.substring(0, wordStart) + text + value.substring(start);
+            editor.selectionStart = editor.selectionEnd = wordStart + text.length;
+            
+            hideAutocomplete();
+            updateLineNumbers();
+            editor.focus();
+        }
+
+        document.getElementById('editor').addEventListener('input', updateLineNumbers);
+        
+        document.getElementById('editor').addEventListener('keydown', (e) => {
+            if (autocompleteVisible) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    autocompleteIndex = Math.min(autocompleteIndex + 1, autocompleteItems.length - 1);
+                    updateAutocompleteSelection();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    autocompleteIndex = Math.max(autocompleteIndex - 1, 0);
+                    updateAutocompleteSelection();
+                } else if (e.key === 'Enter' || e.key === 'Tab') {
+                    e.preventDefault();
+                    if (autocompleteItems[autocompleteIndex]) {
+                        insertAutocomplete(autocompleteItems[autocompleteIndex].text);
+                    }
+                } else if (e.key === 'Escape') {
+                    hideAutocomplete();
+                }
+            }
+        });
+
+        document.getElementById('editor').addEventListener('input', (e) => {
+            updateLineNumbers();
+            
+            const editor = document.getElementById('editor');
+            const cursorPos = editor.selectionStart;
+            const textBeforeCursor = editor.value.substring(0, cursorPos);
+            const match = textBeforeCursor.match(/[a-zA-Z_.]+$/);
+            
+            if (match && match[0].length > 0) {
+                showAutocomplete(match[0]);
+            } else {
+                hideAutocomplete();
+            }
+        });
+
+        document.getElementById('editor').addEventListener('scroll', function() {
+            document.getElementById('lineNumbers').style.top = (15 - this.scrollTop) + 'px';
+            syncScroll();
+            hideAutocomplete();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#autocomplete') && !e.target.closest('#editor')) {
+                hideAutocomplete();
+            }
+        });
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms / executionSpeed));
@@ -487,7 +1198,86 @@ log("¡Completado!");</code></pre>
                 '<div class="var-item">motorB.vel = ' + robot.motorB.velocity + '</div>';
         }
 
-        // API LEGO SPIKE PRIME
+        function isMouseOverRobot(mouseX, mouseY) {
+            const robotPixelX = robot.x * CELL_SIZE;
+            const robotPixelY = robot.y * CELL_SIZE;
+            const size = CELL_SIZE * 0.7;
+            
+            const dx = mouseX - robotPixelX;
+            const dy = mouseY - robotPixelY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            return distance < size;
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (isRunning) return;
+            
+            const mousePos = getMousePos(e);
+            if (isMouseOverRobot(mousePos.x, mousePos.y)) {
+                isDragging = true;
+                canvas.classList.add('dragging');
+                dragOffsetX = mousePos.x - (robot.x * CELL_SIZE);
+                dragOffsetY = mousePos.y - (robot.y * CELL_SIZE);
+                log('🖱️ Robot seleccionado - Arrastra para mover', 'info');
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const mousePos = getMousePos(e);
+            
+            if (isDragging) {
+                robot.x = (mousePos.x - dragOffsetX) / CELL_SIZE;
+                robot.y = (mousePos.y - dragOffsetY) / CELL_SIZE;
+                
+                robot.x = Math.max(2, Math.min(canvas.width / CELL_SIZE - 2, robot.x));
+                robot.y = Math.max(2, Math.min(canvas.height / CELL_SIZE - 2, robot.y));
+                
+                updateVars();
+                drawWorld();
+            } else if (!isRunning && isMouseOverRobot(mousePos.x, mousePos.y)) {
+                canvas.classList.add('draggable');
+            } else {
+                canvas.classList.remove('draggable');
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                canvas.classList.remove('dragging');
+                log('✓ Robot posicionado en (' + robot.x.toFixed(1) + ', ' + robot.y.toFixed(1) + ')', 'info');
+            }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            if (isDragging) {
+                isDragging = false;
+                canvas.classList.remove('dragging');
+            }
+            canvas.classList.remove('draggable');
+        });
+
+        async function waitForStepClick() {
+            waitingForStep = true;
+            return new Promise(resolve => {
+                const checkStep = setInterval(() => {
+                    if (!waitingForStep) {
+                        clearInterval(checkStep);
+                        resolve();
+                    }
+                }, 50);
+            });
+        }
+
         const motor_pair = {
             pair(pairNum, portA, portB) {
                 log('✓ Motores configurados en puertos ' + portA + ' y ' + portB, 'info');
@@ -496,7 +1286,9 @@ log("¡Completado!");</code></pre>
             async move_for_degrees(pairNum, degrees, steering, velocity = 360) {
                 log('→ Moviendo ' + degrees + '° (dir: ' + steering + ', vel: ' + velocity + ')', 'info');
                 
-                const distance = Math.abs(degrees / 360) * 2;
+                const wheelRotations = degrees / 360;
+                const baseDistance = wheelRotations * WHEEL_CIRCUMFERENCE;
+                
                 const steps = Math.abs(degrees / 10);
                 const dir = degrees > 0 ? 1 : -1;
                 
@@ -507,26 +1299,19 @@ log("¡Completado!");</code></pre>
                         await sleep(100);
                     }
                     
-                    if (stepMode && isPaused) {
-                        await new Promise(resolve => {
-                            const check = setInterval(() => {
-                                if (!isPaused) {
-                                    clearInterval(check);
-                                    resolve();
-                                }
-                            }, 50);
-                        });
-                        isPaused = true;
-                    }
-                    
                     robot.motorA.velocity = velocity * dir;
                     robot.motorB.velocity = velocity * dir;
                     
-                    const turn = (steering / 100) * 0.03;
+                    const steeringFactor = steering / 100;
+                    const leftDistance = baseDistance * (1 - steeringFactor * 0.5) / steps;
+                    const rightDistance = baseDistance * (1 + steeringFactor * 0.5) / steps;
                     
-                    robot.x += Math.cos(robot.angle) * (distance / steps) * dir;
-                    robot.y += Math.sin(robot.angle) * (distance / steps) * dir;
-                    robot.angle += turn * dir;
+                    const avgDistance = (leftDistance + rightDistance) / 2;
+                    robot.x += Math.cos(robot.angle) * avgDistance * dir;
+                    robot.y += Math.sin(robot.angle) * avgDistance * dir;
+                    
+                    const turnAmount = (rightDistance - leftDistance) / WHEELBASE;
+                    robot.angle += turnAmount * dir;
                     
                     robot.motorA.degrees += degrees / steps;
                     robot.motorB.degrees += degrees / steps;
@@ -541,11 +1326,64 @@ log("¡Completado!");</code></pre>
                 updateVars();
                 drawWorld();
             },
+
+            async move_for_time(pairNum, time, steering, velocity) {
+                log('→ Moviendo por ' + time + 'ms (dir: ' + steering + ', vel: ' + velocity + '%)', 'info');
+                
+                const steps = Math.max(Math.floor(time / 30), 1);
+                const timePerStep = time / steps;
+                
+                // Convertir velocidad de porcentaje a distancia por paso
+                // velocity está en rango -100 a 100
+                const speedFactor = velocity / 100;
+                const baseSpeed = 0.05; // Velocidad base en unidades de celda por paso
+                
+                for (let i = 0; i < steps; i++) {
+                    if (!isRunning) break;
+                    
+                    while (isPaused && !stepMode) {
+                        await sleep(100);
+                    }
+                    
+                    robot.motorA.velocity = velocity * 10;
+                    robot.motorB.velocity = velocity * 10;
+                    
+                    // Calcular movimiento basado en steering
+                    const steeringFactor = steering / 100;
+                    const leftSpeed = speedFactor * baseSpeed * (1 - steeringFactor * 0.5);
+                    const rightSpeed = speedFactor * baseSpeed * (1 + steeringFactor * 0.5);
+                    
+                    // Movimiento hacia adelante (promedio)
+                    const avgSpeed = (leftSpeed + rightSpeed) / 2;
+                    robot.x += Math.cos(robot.angle) * avgSpeed;
+                    robot.y += Math.sin(robot.angle) * avgSpeed;
+                    
+                    // Rotación basada en diferencia entre ruedas
+                    const turnAmount = (rightSpeed - leftSpeed) / WHEELBASE;
+                    robot.angle += turnAmount;
+                    
+                    // Actualizar grados de los motores (estimación)
+                    const avgDistance = Math.abs(avgSpeed);
+                    const degreesThisStep = (avgDistance / WHEEL_CIRCUMFERENCE) * 360;
+                    robot.motorA.degrees += degreesThisStep * Math.sign(velocity);
+                    robot.motorB.degrees += degreesThisStep * Math.sign(velocity);
+                    
+                    updateVars();
+                    drawWorld();
+                    await sleep(timePerStep);
+                }
+                
+                robot.motorA.velocity = 0;
+                robot.motorB.velocity = 0;
+                updateVars();
+                drawWorld();
+            },
             
             async move_tank_for_degrees(pairNum, degrees, leftVel, rightVel) {
                 log('→ Tank: ' + degrees + '° (L:' + leftVel + ' R:' + rightVel + ')', 'info');
                 
                 const steps = Math.abs(degrees / 10);
+                const wheelRotations = degrees / 360;
                 
                 for (let i = 0; i < steps; i++) {
                     if (!isRunning) break;
@@ -557,12 +1395,18 @@ log("¡Completado!");</code></pre>
                     robot.motorA.velocity = leftVel;
                     robot.motorB.velocity = rightVel;
                     
-                    const turn = (rightVel - leftVel) / 3000;
-                    const dist = Math.abs(degrees / 360) * 1.5 / steps;
+                    const leftSign = leftVel >= 0 ? 1 : -1;
+                    const rightSign = rightVel >= 0 ? 1 : -1;
                     
-                    robot.x += Math.cos(robot.angle) * dist;
-                    robot.y += Math.sin(robot.angle) * dist;
-                    robot.angle += turn;
+                    const leftDistance = wheelRotations * WHEEL_CIRCUMFERENCE * leftSign / steps;
+                    const rightDistance = wheelRotations * WHEEL_CIRCUMFERENCE * rightSign / steps;
+                    
+                    const avgDistance = (leftDistance + rightDistance) / 2;
+                    robot.x += Math.cos(robot.angle) * avgDistance;
+                    robot.y += Math.sin(robot.angle) * avgDistance;
+                    
+                    const turnAmount = (rightDistance - leftDistance) / WHEELBASE;
+                    robot.angle += turnAmount;
                     
                     updateVars();
                     drawWorld();
@@ -585,18 +1429,51 @@ log("¡Completado!");</code></pre>
             document.getElementById('consoleOutput').innerHTML = '';
             log('🚀 Iniciando programa...', 'info');
             
+            if (stepMode) {
+                log('⏭ Modo PASO A PASO activado - Haz clic en "Paso a Paso" para avanzar', 'step');
+            }
+            
+            codeLines = code.split('\n').filter(line => line.trim() && !line.trim().startsWith('//'));
+            currentLine = -1;
+            
             try {
-                const func = new Function('motor_pair', 'log', 'delay', 
-                    'return (async function() {' + code + '\nlog("✓ Programa completado", "info");})();');
-                await func(motor_pair, log, delay);
+                if (stepMode) {
+                    for (let i = 0; i < codeLines.length; i++) {
+                        if (!isRunning) break;
+                        
+                        currentLine = code.split('\n').indexOf(codeLines[i]);
+                        updateLineNumbers();
+                        log('📍 Línea ' + (currentLine + 1) + ': ' + codeLines[i].trim(), 'step');
+                        
+                        const func = new Function('motor_pair', 'log', 'delay', 
+                            'return (async function() {' + codeLines[i] + '})();');
+                        await func(motor_pair, log, delay);
+                        
+                        if (i < codeLines.length - 1) {
+                            await waitForStepClick();
+                        }
+                    }
+                    currentLine = -1;
+                    updateLineNumbers();
+                } else {
+                    const func = new Function('motor_pair', 'log', 'delay', 
+                        'return (async function() {' + code + '})();');
+                    await func(motor_pair, log, delay);
+                }
+                
+                log('✓ Programa completado', 'info');
             } catch (error) {
-                log('✗ ERROR: ' + error.message, 'error');
+                log('✗ ERROR en línea ' + (currentLine + 1) + ': ' + error.message, 'error');
                 console.error(error);
             }
             
             isRunning = false;
+            stepMode = false;
+            currentLine = -1;
+            updateLineNumbers();
             document.getElementById('runBtn').disabled = false;
             document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('stepBtn').textContent = '⏭ Paso a Paso';
         }
 
         const examples = {
@@ -620,31 +1497,27 @@ motor_pair.pair(0, 'A', 'B');
 
 for (let i = 0; i < 4; i++) {
     log("Lado " + (i + 1));
-    
-    // Avanzar
     await motor_pair.move_for_degrees(0, 360, 0, 400);
-    
-    // Girar 90 grados
     await motor_pair.move_tank_for_degrees(0, 250, 400, -400);
 }
 
 log("¡Cuadrado completado!");`,
             
-            giro: `// Ejemplo: Movimientos con Giros
+            time: `// Ejemplo: Movimiento por Tiempo
 motor_pair.pair(0, 'A', 'B');
 
-log("Avanzar recto");
-await motor_pair.move_for_degrees(0, 360, 0, 300);
+log("Avanzar 2 segundos");
+await motor_pair.move_for_time(0, 2000, 0, 50);
 
-await delay(300);
+await delay(500);
 
-log("Girar a la derecha");
-await motor_pair.move_for_degrees(0, 360, 50, 300);
+log("Girar derecha 1 segundo");
+await motor_pair.move_for_time(0, 1000, 100, 40);
 
-await delay(300);
+await delay(500);
 
-log("Girar a la izquierda");
-await motor_pair.move_for_degrees(0, 360, -50, 300);
+log("Retroceder 1.5 segundos");
+await motor_pair.move_for_time(0, 1500, 0, -50);
 
 log("¡Listo!");`
         };
@@ -667,12 +1540,11 @@ log("¡Listo!");`
             if (!isRunning) {
                 isRunning = true;
                 stepMode = true;
-                isPaused = true;
                 document.getElementById('runBtn').disabled = true;
-                document.getElementById('pauseBtn').disabled = false;
+                document.getElementById('stepBtn').textContent = '▶ Siguiente';
                 executeCode();
-            } else {
-                isPaused = false;
+            } else if (waitingForStep) {
+                waitingForStep = false;
             }
         });
 
@@ -680,6 +1552,9 @@ log("¡Listo!");`
             isRunning = false;
             isPaused = false;
             stepMode = false;
+            waitingForStep = false;
+            currentLine = -1;
+            updateLineNumbers();
             robot = { x: 10, y: 8, angle: 0, motorA: {degrees:0,velocity:0}, motorB: {degrees:0,velocity:0} };
             drawWorld();
             updateVars();
@@ -687,6 +1562,7 @@ log("¡Listo!");`
             document.getElementById('runBtn').disabled = false;
             document.getElementById('pauseBtn').disabled = true;
             document.getElementById('pauseBtn').textContent = '⏸ Pausar';
+            document.getElementById('stepBtn').textContent = '⏭ Paso a Paso';
             log('🔄 Simulador reiniciado', 'info');
         });
 
@@ -695,26 +1571,84 @@ log("¡Listo!");`
             document.getElementById('speedValue').textContent = executionSpeed + 'x';
         });
 
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const code = document.getElementById('editor').value;
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            const fecha = new Date();
+            const nombreArchivo = 'robot_' + 
+                fecha.getFullYear() + 
+                ('0' + (fecha.getMonth() + 1)).slice(-2) + 
+                ('0' + fecha.getDate()).slice(-2) + '_' +
+                ('0' + fecha.getHours()).slice(-2) + 
+                ('0' + fecha.getMinutes()).slice(-2) + '.js';
+            
+            a.download = nombreArchivo;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            log('💾 Archivo guardado: ' + nombreArchivo, 'info');
+        });
+
+        document.getElementById('openBtn').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.getElementById('editor').value = event.target.result;
+                updateLineNumbers();
+                log('📂 Archivo cargado: ' + file.name, 'info');
+            };
+            reader.onerror = () => {
+                log('✗ Error al leer el archivo', 'error');
+            };
+            reader.readAsText(file);
+            
+            e.target.value = '';
+        });
+
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', e => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 e.target.classList.add('active');
                 document.getElementById('editor').value = examples[e.target.dataset.example];
+                updateLineNumbers();
             });
         });
 
-        // Modal de Ayuda
         const modal = document.getElementById('helpModal');
         document.getElementById('helpBtn').onclick = () => modal.style.display = 'block';
         document.querySelector('.close').onclick = () => modal.style.display = 'none';
         window.onclick = e => { if (e.target == modal) modal.style.display = 'none'; };
 
+        document.getElementById('zoomInBtn').addEventListener('click', () => updateZoom(0.2));
+        document.getElementById('zoomOutBtn').addEventListener('click', () => updateZoom(-0.2));
+        
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            updateZoom(delta);
+        });
+
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         updateVars();
+        updateLineNumbers();
         log('✓ Simulador LEGO Spike Prime iniciado', 'info');
-        log('💡 Presiona ❓ Ayuda para ver la documentación completa', 'info');
-        log('📝 Selecciona un ejemplo o escribe tu código', 'info');
+        log('💡 Usa "Paso a Paso" para ejecutar línea por línea', 'info');
+        log('🔍 Usa +/- o la rueda del mouse para hacer zoom', 'info');
+        log('🖱️ Arrastra el robot para cambiar su posición inicial', 'info');
+        log('📖 Pasa el cursor sobre las funciones para ver su documentación', 'info');
     </script>
 </body>
 </html>
